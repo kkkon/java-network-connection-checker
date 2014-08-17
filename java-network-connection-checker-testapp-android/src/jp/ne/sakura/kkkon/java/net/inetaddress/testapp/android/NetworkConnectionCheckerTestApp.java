@@ -75,7 +75,7 @@ public class NetworkConnectionCheckerTestApp extends Activity
         final Context context = this.getApplicationContext();
 
         {
-            NetworkConnectionChecker.initialize();
+            NetworkConnectionChecker.initialize( "kkkon.sakura.ne.jp" );
         }
 
         super.onCreate(savedInstanceState);
@@ -104,6 +104,22 @@ public class NetworkConnectionCheckerTestApp extends Activity
             }
         } );
         layout.addView( btn1 );
+
+        {
+            Button btn = new Button( this );
+            btn.setText( "disp isReachable" );
+            btn.setOnClickListener( new View.OnClickListener() {
+
+                @Override
+                public void onClick(View view)
+                {
+                    final boolean isReachable = NetworkConnectionChecker.isReachable();
+                    Toast toast = Toast.makeText( context, "IsReachable=" + isReachable , Toast.LENGTH_LONG );
+                    toast.show();
+                }
+            } );
+            layout.addView( btn );
+        }
 
         {
             Button btn = new Button( this );
@@ -490,4 +506,20 @@ public class NetworkConnectionCheckerTestApp extends Activity
 
         setContentView( layout );
     }
+
+    @Override
+    protected void onStart() {
+        NetworkConnectionChecker.start();
+
+        super.onStart(); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    protected void onStop() {
+        NetworkConnectionChecker.stop();
+
+        super.onStop(); //To change body of generated methods, choose Tools | Templates.
+    }
+
+
 }
