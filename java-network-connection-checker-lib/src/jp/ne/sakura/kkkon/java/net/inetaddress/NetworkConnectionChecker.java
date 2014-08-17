@@ -23,6 +23,16 @@
  */
 package jp.ne.sakura.kkkon.java.net.inetaddress;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.ProxySelector;
+import java.net.SocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,7 +44,19 @@ public class NetworkConnectionChecker
 {
     private static boolean isAndroid = false;
 
-    public static synchronized void initialize()
+    /*
+     * 'www.google.com' is low ttl.( 300 second )
+     * But this server drop ECHO TCP SYN.
+     * Not responce 'Connection Refuse'. blackhole it...
+     */
+    private static final String hostnameLowTTL = "www.google.com";
+
+    private static String hostname = "kkkon.sakura.ne.jp";
+    private static volatile boolean isReachable = false;
+
+    private static ResolverThread thread = null;
+
+    public static synchronized void initialize( final String host )
     {
         Class<?>    clazz = null;
         try
@@ -43,6 +65,195 @@ public class NetworkConnectionChecker
             isAndroid = true;
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        if ( null != host )
+        {
+            hostname = host;
+        }
+    }
+
+    public static boolean isReachable()
+    {
+        return isReachable;
+    }
+
+
+    public static synchronized  void start()
+    {
+        if ( null == thread )
+        {
+            thread = new ResolverThread();
+            thread.setName( "DNS Resolver KK" );
+            thread.start();
+        }
+    }
+
+    public static synchronized  void stop()
+    {
+        if ( null != thread )
+        {
+            if ( thread.isAlive() )
+            {
+                thread.interrupt();
+            }
+
+            try
+            {
+                thread.join();
+            }
+            catch (InterruptedException ex)
+            {
+                Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+            thread = null;
+        }
+    }
+
+    private static class ResolverThread extends Thread
+    {
+
+        @Override
+        public void run()
+        {
+            isReachable = false;
+
+            while( !this.isInterrupted() )
+            {
+                try
+                {
+                    Thread.sleep( 15 * 1000 );
+                }
+                catch (InterruptedException ex)
+                {
+                    Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
+                    break;
+                }
+                isReachable = false;
+
+                String  target = null;
+                {
+                    ProxySelector proxySelector = ProxySelector.getDefault();
+                    //Log.d( TAG, "proxySelector=" + proxySelector );
+                    if ( null != proxySelector )
+                    {
+                        URI uri = null;
+                        try
+                        {
+                            uri = new URI("http://www.google.com/");
+                        }
+                        catch ( URISyntaxException e )
+                        {
+                            //Log.d( TAG, e.toString() );
+                        }
+                        List<Proxy> proxies = proxySelector.select( uri );
+                        if ( null != proxies )
+                        {
+                            for ( final Proxy proxy : proxies )
+                            {
+                                //Log.d( TAG, " proxy=" + proxy );
+                                if ( null != proxy )
+                                {
+                                    if ( Proxy.Type.HTTP == proxy.type() )
+                                    {
+                                        final SocketAddress sa = proxy.address();
+                                        if ( sa instanceof InetSocketAddress )
+                                        {
+                                            final InetSocketAddress isa = (InetSocketAddress)sa;
+                                            target = isa.getHostName();
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if ( null == target )
+                {
+                    target = hostnameLowTTL;
+                    InetAddress dest = null;
+                    try
+                    {
+                        dest = InetAddress.getByName( target );
+                    }
+                    catch (UnknownHostException ex)
+                    {
+                        Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+
+                    if ( null == dest )
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        target = hostname;
+                        try
+                        {
+                            dest = InetAddress.getByName( target );
+                        }
+                        catch (UnknownHostException ex)
+                        {
+                            Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        if ( null == dest )
+                        {
+                            continue;
+                        }
+                        try
+                        {
+                            if ( dest.isReachable( 5*1000 ) )
+                            {
+                                //Log.d( TAG, "destHost=" + dest.toString() + " reachable" );
+                                isReachable = true;
+                            }
+                            else
+                            {
+                                //Log.d( TAG, "destHost=" + dest.toString() + " not reachable" );
+                            }
+                        }
+                        catch ( IOException ex )
+                        {
+                            Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                }
+                else
+                {
+                    InetAddress dest = null;
+                    try
+                    {
+                        dest = InetAddress.getByName( target );
+                    }
+                    catch (UnknownHostException ex)
+                    {
+                        Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    if ( null == dest )
+                    {
+                        continue;
+                    }
+                    try
+                    {
+                        if ( dest.isReachable( 5*1000 ) )
+                        {
+                            //Log.d( TAG, "destHost=" + dest.toString() + " reachable" );
+                            isReachable = true;
+                        }
+                        else
+                        {
+                            //Log.d( TAG, "destHost=" + dest.toString() + " not reachable" );
+                        }
+                    }
+                    catch ( IOException ex )
+                    {
+                        Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            } // while
         }
     }
 }
