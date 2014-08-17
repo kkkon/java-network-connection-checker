@@ -38,8 +38,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.ProxySelector;
+import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
@@ -74,30 +76,6 @@ public class NetworkConnectionCheckerTestApp extends Activity
 
         {
             NetworkConnectionChecker.initialize();
-        }
-        {
-            ProxySelector proxySelector = ProxySelector.getDefault();
-            Log.d( TAG, "proxySelector=" + proxySelector );
-            if ( null != proxySelector )
-            {
-                URI uri = null;
-                try
-                {
-                    uri = new URI("http://www.google.com/");
-                }
-                catch ( URISyntaxException e )
-                {
-                    Log.d( TAG, e.toString() );
-                }
-                List<Proxy> proxies = proxySelector.select( uri );
-                if ( null != proxies )
-                {
-                    for ( final Proxy proxy : proxies )
-                    {
-                        Log.d( TAG, " proxy=" + proxy );
-                    }
-                }
-            }
         }
 
         super.onCreate(savedInstanceState);
@@ -248,6 +226,7 @@ public class NetworkConnectionCheckerTestApp extends Activity
                     Thread thread = new Thread( new Runnable() {
 
                         public void run() {
+                            Log.d( TAG, "start" );
                             try
                             {
                                 InetAddress dest = InetAddress.getByName("www.google.com");
@@ -290,6 +269,7 @@ public class NetworkConnectionCheckerTestApp extends Activity
                                     Log.d( TAG, "destHost=" + destHost );
                                 }
                             }
+                            Log.d( TAG, "end" );
                         }
                     });
                     thread.start();
@@ -324,9 +304,129 @@ public class NetworkConnectionCheckerTestApp extends Activity
                     Thread thread = new Thread( new Runnable() {
 
                         public void run() {
+                            Log.d( TAG, "start" );
                             try
                             {
                                 InetAddress dest = InetAddress.getByName("kkkon.sakura.ne.jp");
+                                if ( null == dest )
+                                {
+                                    dest = destHost;
+                                }
+                                if ( null != dest )
+                                {
+                                    try
+                                    {
+                                        if ( dest.isReachable( 5*1000 ) )
+                                        {
+                                            Log.d( TAG, "destHost=" + dest.toString() + " reachable" );
+                                            isReachable = true;
+                                        }
+                                        else
+                                        {
+                                            Log.d( TAG, "destHost=" + dest.toString() + " not reachable" );
+                                        }
+                                        destHost = dest;
+                                    }
+                                    catch ( IOException e )
+                                    {
+                                        
+                                    }
+                                }
+                                else
+                                {
+                                }
+                            }
+                            catch ( UnknownHostException e )
+                            {
+                                Log.d( TAG, "dns error" + e.toString() );
+                                destHost = null;
+                            }
+                            {
+                                if ( null != destHost )
+                                {
+                                    Log.d( TAG, "destHost=" + destHost );
+                                }
+                            }
+                            Log.d( TAG, "end" );
+                        }
+                    });
+                    thread.start();
+                    try
+                    {
+                        thread.join();
+                        {
+                            final String addr = (null==destHost)?(""):(destHost.toString());
+                            final String reachable = (isReachable)?("reachable"):("not reachable");
+                            Toast toast = Toast.makeText( context, "DNS result=\n" + addr + "\n " + reachable, Toast.LENGTH_LONG );
+                            toast.show();
+                        }
+                    }
+                    catch ( InterruptedException e )
+                    {
+                        
+                    }
+                }
+            });
+            layout.addView( btn );
+        }
+
+        {
+            Button btn = new Button( this );
+            btn.setText( "pre DNS query(kkkon.sakura.ne.jp) support proxy" );
+            btn.setOnClickListener( new View.OnClickListener() {
+
+                @Override
+                public void onClick(View view)
+                {
+                    isReachable = false;
+                    Thread thread = new Thread( new Runnable() {
+
+                        public void run() {
+                            try
+                            {
+                                String  target = null;
+                                {
+                                    ProxySelector proxySelector = ProxySelector.getDefault();
+                                    Log.d( TAG, "proxySelector=" + proxySelector );
+                                    if ( null != proxySelector )
+                                    {
+                                        URI uri = null;
+                                        try
+                                        {
+                                            uri = new URI("http://www.google.com/");
+                                        }
+                                        catch ( URISyntaxException e )
+                                        {
+                                            Log.d( TAG, e.toString() );
+                                        }
+                                        List<Proxy> proxies = proxySelector.select( uri );
+                                        if ( null != proxies )
+                                        {
+                                            for ( final Proxy proxy : proxies )
+                                            {
+                                                Log.d( TAG, " proxy=" + proxy );
+                                                if ( null != proxy )
+                                                {
+                                                    if ( Proxy.Type.HTTP == proxy.type() )
+                                                    {
+                                                        final SocketAddress sa = proxy.address();
+                                                        if ( sa instanceof InetSocketAddress )
+                                                        {
+                                                            final InetSocketAddress isa = (InetSocketAddress)sa;
+                                                            target = isa.getHostName();
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                if ( null == target )
+                                {
+                                    target = "kkkon.sakura.ne.jp";
+                                }
+                                InetAddress dest = InetAddress.getByName(target);
                                 if ( null == dest )
                                 {
                                     dest = destHost;
