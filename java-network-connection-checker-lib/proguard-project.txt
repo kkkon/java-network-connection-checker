@@ -23,6 +23,10 @@
     public static *** d(...);
     public static *** i(...);
 }
+-assumenosideeffects class java.util.logging.Logger {
+    public static *** getLogger(...);
+    public *;
+}
 -assumenosideeffects class jp.ne.sakura.kkkon.java.net.inetaddress.ExceptionHandler {
     public static *** LogV(...);
     public static *** LogD(...);
