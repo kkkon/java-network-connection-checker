@@ -581,14 +581,14 @@ public class NetworkConnectionCheckerTestApp extends Activity
 
     @Override
     protected void onStart() {
-        //NetworkConnectionChecker.start();
+        NetworkConnectionChecker.start();
 
         super.onStart(); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     protected void onStop() {
-        //NetworkConnectionChecker.stop();
+        NetworkConnectionChecker.stop();
 
         super.onStop(); //To change body of generated methods, choose Tools | Templates.
     }
