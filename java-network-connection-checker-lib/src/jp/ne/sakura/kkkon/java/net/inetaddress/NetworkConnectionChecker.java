@@ -24,6 +24,7 @@
 package jp.ne.sakura.kkkon.java.net.inetaddress;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
@@ -31,6 +32,8 @@ import java.net.ProxySelector;
 import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.logging.Level;
@@ -147,22 +150,26 @@ public class NetworkConnectionChecker
                         {
                             //Log.d( TAG, e.toString() );
                         }
-                        List<Proxy> proxies = proxySelector.select( uri );
-                        if ( null != proxies )
+
+                        if ( null != uri )
                         {
-                            for ( final Proxy proxy : proxies )
+                            List<Proxy> proxies = proxySelector.select( uri );
+                            if ( null != proxies )
                             {
-                                //Log.d( TAG, " proxy=" + proxy );
-                                if ( null != proxy )
+                                for ( final Proxy proxy : proxies )
                                 {
-                                    if ( Proxy.Type.HTTP == proxy.type() )
+                                    //Log.d( TAG, " proxy=" + proxy );
+                                    if ( null != proxy )
                                     {
-                                        final SocketAddress sa = proxy.address();
-                                        if ( sa instanceof InetSocketAddress )
+                                        if ( Proxy.Type.HTTP == proxy.type() )
                                         {
-                                            final InetSocketAddress isa = (InetSocketAddress)sa;
-                                            target = isa.getHostName();
-                                            break;
+                                            final SocketAddress sa = proxy.address();
+                                            if ( sa instanceof InetSocketAddress )
+                                            {
+                                                final InetSocketAddress isa = (InetSocketAddress)sa;
+                                                target = isa.getHostName();
+                                                break;
+                                            }
                                         }
                                     }
                                 }
@@ -246,6 +253,72 @@ public class NetworkConnectionChecker
                         else
                         {
                             //Log.d( TAG, "destHost=" + dest.toString() + " not reachable" );
+                            {
+                                ProxySelector proxySelector = ProxySelector.getDefault();
+                                //Log.d( TAG, "proxySelector=" + proxySelector );
+                                if ( null != proxySelector )
+                                {
+                                    URI uri = null;
+                                    try
+                                    {
+                                        uri = new URI("http://www.google.com/");
+                                    }
+                                    catch ( URISyntaxException e )
+                                    {
+                                        //Log.d( TAG, e.toString() );
+                                    }
+
+                                    if ( null != uri )
+                                    {
+                                        List<Proxy> proxies = proxySelector.select( uri );
+                                        if ( null != proxies )
+                                        {
+                                            for ( final Proxy proxy : proxies )
+                                            {
+                                                //Log.d( TAG, " proxy=" + proxy );
+                                                if ( null != proxy )
+                                                {
+                                                    if ( Proxy.Type.HTTP == proxy.type() )
+                                                    {
+                                                        URL url = uri.toURL();
+                                                        URLConnection conn = null;
+                                                        if ( null != url )
+                                                        {
+                                                            try
+                                                            {
+                                                                conn = url.openConnection( proxy );
+                                                                if ( null != conn )
+                                                                {
+                                                                    conn.setConnectTimeout( 3*1000 );
+                                                                    conn.setReadTimeout( 3*1000 );
+                                                                }
+                                                            }
+                                                            catch ( IOException e )
+                                                            {
+                                                                //Log.d( TAG, "got Exception" + e.toString(), e );
+                                                            }
+                                                            if ( conn instanceof HttpURLConnection )
+                                                            {
+                                                                HttpURLConnection httpConn = (HttpURLConnection)conn;
+                                                                if ( 0 < httpConn.getResponseCode() )
+                                                                {
+                                                                    isReachable = true;
+                                                                }
+                                                                //Log.d( TAG, " HTTP ContentLength=" + httpConn.getContentLength() );
+                                                                //Log.d( TAG, " HTTP res=" + httpConn.getResponseCode() );
+                                                                httpConn.disconnect();
+                                                                //Log.d( TAG, " HTTP ContentLength=" + httpConn.getContentLength() );
+                                                                //Log.d( TAG, " HTTP res=" + httpConn.getResponseCode() );
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
                         }
                     }
                     catch ( IOException ex )
