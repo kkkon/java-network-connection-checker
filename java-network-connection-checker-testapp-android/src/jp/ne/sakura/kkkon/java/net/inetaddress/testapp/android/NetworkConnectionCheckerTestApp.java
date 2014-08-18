@@ -37,6 +37,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
@@ -44,6 +45,8 @@ import java.net.ProxySelector;
 import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -459,12 +462,81 @@ public class NetworkConnectionCheckerTestApp extends Activity
                                         else
                                         {
                                             Log.d( TAG, "destHost=" + dest.toString() + " not reachable" );
+                                            {
+                                                ProxySelector proxySelector = ProxySelector.getDefault();
+                                                //Log.d( TAG, "proxySelector=" + proxySelector );
+                                                if ( null != proxySelector )
+                                                {
+                                                    URI uri = null;
+                                                    try
+                                                    {
+                                                        uri = new URI("http://www.google.com/");
+                                                    }
+                                                    catch ( URISyntaxException e )
+                                                    {
+                                                        //Log.d( TAG, e.toString() );
+                                                    }
+
+                                                    if ( null != uri )
+                                                    {
+                                                        List<Proxy> proxies = proxySelector.select( uri );
+                                                        if ( null != proxies )
+                                                        {
+                                                            for ( final Proxy proxy : proxies )
+                                                            {
+                                                                //Log.d( TAG, " proxy=" + proxy );
+                                                                if ( null != proxy )
+                                                                {
+                                                                    if ( Proxy.Type.HTTP == proxy.type() )
+                                                                    {
+                                                                        URL url = uri.toURL();
+                                                                        URLConnection conn = null;
+                                                                        if ( null != url )
+                                                                        {
+                                                                            try
+                                                                            {
+                                                                                conn = url.openConnection( proxy );
+                                                                                if ( null != conn )
+                                                                                {
+                                                                                    conn.setConnectTimeout( 3*1000 );
+                                                                                    conn.setReadTimeout( 3*1000 );
+                                                                                }
+                                                                            }
+                                                                            catch ( IOException e )
+                                                                            {
+                                                                                Log.d( TAG, "got Exception" + e.toString(), e );
+                                                                            }
+                                                                            if ( conn instanceof HttpURLConnection )
+                                                                            {
+                                                                                HttpURLConnection httpConn = (HttpURLConnection)conn;
+                                                                                if ( 0 < httpConn.getResponseCode() )
+                                                                                {
+                                                                                    isReachable = true;
+                                                                                }
+                                                                                Log.d( TAG, " HTTP ContentLength=" + httpConn.getContentLength() );
+                                                                                Log.d( TAG, " HTTP res=" + httpConn.getResponseCode() );
+                                                                                //httpConn.setInstanceFollowRedirects( false );
+                                                                                //httpConn.setRequestMethod( "HEAD" );
+                                                                                //conn.connect();
+                                                                                httpConn.disconnect();
+                                                                                Log.d( TAG, " HTTP ContentLength=" + httpConn.getContentLength() );
+                                                                                Log.d( TAG, " HTTP res=" + httpConn.getResponseCode() );
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+
                                         }
                                         destHost = dest;
                                     }
                                     catch ( IOException e )
                                     {
-                                        
+                                        Log.d( TAG, "got Excpetion " + e.toString() );
                                     }
                                 }
                                 else
@@ -509,14 +581,14 @@ public class NetworkConnectionCheckerTestApp extends Activity
 
     @Override
     protected void onStart() {
-        NetworkConnectionChecker.start();
+        //NetworkConnectionChecker.start();
 
         super.onStart(); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     protected void onStop() {
-        NetworkConnectionChecker.stop();
+        //NetworkConnectionChecker.stop();
 
         super.onStop(); //To change body of generated methods, choose Tools | Templates.
     }
