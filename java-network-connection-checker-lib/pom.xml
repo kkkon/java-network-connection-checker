@@ -8,12 +8,12 @@
     <parent>
         <groupId>jp.ne.sakura.kkkon.java.net.inetaddress</groupId>
         <artifactId>java-network-connection-checker-pom</artifactId>
-        <version>0.2-SNAPSHOT</version>
+        <version>0.2</version>
     </parent>
 
     <groupId>jp.ne.sakura.kkkon.java.net.inetaddress</groupId>
     <artifactId>java-network-connection-checker-lib</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.2</version>
     <packaging>jar</packaging>
 
     <name>Java Network Connection Checker Lib</name>
