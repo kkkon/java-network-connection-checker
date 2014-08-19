@@ -3,10 +3,10 @@
   <groupId>jp.ne.sakura.kkkon.java.net.inetaddress</groupId>
   <artifactId>java-network-connection-checker-lib</artifactId>
   <versioning>
-    <release>0.3</release>
+    <release>0.4</release>
     <versions>
-      <version>0.3</version>
+      <version>0.4</version>
     </versions>
-    <lastUpdated>20140818182715</lastUpdated>
+    <lastUpdated>20140819215452</lastUpdated>
   </versioning>
 </metadata>

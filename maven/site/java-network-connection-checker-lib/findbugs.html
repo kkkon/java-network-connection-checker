@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>Java Network Connection Checker Lib &#x2013; Project Mailing Lists</title>
+    <title>Java Network Connection Checker Lib &#x2013; FindBugs Bug Detector Report</title>
     <style type="text/css" media="all">
       @import url("./css/maven-base.css");
       @import url("./css/maven-theme.css");
@@ -56,53 +56,23 @@
           </ul>
                        <h5>Project Documentation</h5>
                   <ul>
-                                                                                                                                                                                                                                                                                                      <li class="expanded">
+                                                                                                                                                                                                                                                                                            <li class="collapsed">
                           <a href="project-info.html" title="Project Information">Project Information</a>
+                  </li>
+                                                                                                                  <li class="expanded">
+                          <a href="project-reports.html" title="Project Reports">Project Reports</a>
                     <ul>
                       <li class="none">
-                          <a href="index.html" title="About">About</a>
+                          <a href="cpd.html" title="CPD">CPD</a>
             </li>
                       <li class="none">
-                          <a href="plugin-management.html" title="Plugin Management">Plugin Management</a>
+                          <a href="pmd.html" title="PMD">PMD</a>
             </li>
                       <li class="none">
-                          <a href="distribution-management.html" title="Distribution Management">Distribution Management</a>
-            </li>
-                      <li class="none">
-                          <a href="dependency-info.html" title="Dependency Information">Dependency Information</a>
-            </li>
-                      <li class="none">
-                          <a href="source-repository.html" title="Source Repository">Source Repository</a>
-            </li>
-                      <li class="none">
-            <strong>Mailing Lists</strong>
+            <strong>FindBugs</strong>
           </li>
-                      <li class="none">
-                          <a href="issue-tracking.html" title="Issue Tracking">Issue Tracking</a>
-            </li>
-                      <li class="none">
-                          <a href="integration.html" title="Continuous Integration">Continuous Integration</a>
-            </li>
-                      <li class="none">
-                          <a href="plugins.html" title="Project Plugins">Project Plugins</a>
-            </li>
-                      <li class="none">
-                          <a href="license.html" title="Project License">Project License</a>
-            </li>
-                      <li class="none">
-                          <a href="team-list.html" title="Project Team">Project Team</a>
-            </li>
-                      <li class="none">
-                          <a href="project-summary.html" title="Project Summary">Project Summary</a>
-            </li>
-                      <li class="none">
-                          <a href="dependencies.html" title="Dependencies">Dependencies</a>
-            </li>
               </ul>
         </li>
-                                                                                                        <li class="collapsed">
-                          <a href="project-reports.html" title="Project Reports">Project Reports</a>
-                  </li>
           </ul>
                              <a href="http://maven.apache.org/" title="Built by Maven" class="poweredBy">
         <img class="poweredBy" alt="Built by Maven" src="./images/logos/maven-feather.png" />
@@ -114,8 +84,48 @@
     <div id="bodyColumn">
       <div id="contentBox">
         <div class="section">
-<h2><a name="Project_Mailing_Lists"></a>Project Mailing Lists</h2><a name="Project_Mailing_Lists"></a>
-<p>There are no mailing lists currently associated with this project.</p></div>
+<h2><a name="FindBugs_Bug_Detector_Report"></a>FindBugs Bug Detector Report</h2>
+<p>The following document contains the results of <a class="externalLink" href="http://findbugs.sourceforge.net">FindBugs</a></p>
+<p>FindBugs Version is <i>2.0.3</i></p>
+<p>Threshold is <i>medium</i></p>
+<p>Effort is <i>min</i></p></div>
+<div class="section">
+<h2><a name="Summary"></a>Summary</h2>
+<table border="0" class="bodyTable">
+<tr class="a">
+<th>Classes</th>
+<th>Bugs</th>
+<th>Errors</th>
+<th>Missing Classes</th></tr>
+<tr class="b">
+<td>3</td>
+<td>1</td>
+<td>0</td>
+<td>1</td></tr></table></div>
+<div class="section">
+<h2><a name="Files"></a>Files</h2>
+<table border="0" class="bodyTable">
+<tr class="a">
+<th>Class</th>
+<th>Bugs</th></tr>
+<tr class="b">
+<td><a href="#jp.ne.sakura.kkkon.java.net.inetaddress.NetworkConnectionChecker">jp.ne.sakura.kkkon.java.net.inetaddress.NetworkConnectionChecker</a></td>
+<td>1</td></tr></table></div><a name="jp.ne.sakura.kkkon.java.net.inetaddress.NetworkConnectionChecker"></a>
+<div class="section">
+<h3><a name="jp.ne.sakura.kkkon.java.net.inetaddress.NetworkConnectionChecker"></a>jp.ne.sakura.kkkon.java.net.inetaddress.NetworkConnectionChecker</h3>
+<table border="0" class="bodyTable">
+<tr class="a">
+<th>Bug</th>
+<th>Category</th>
+<th>Details</th>
+<th>Line</th>
+<th>Priority</th></tr>
+<tr class="b">
+<td>Dead store to clazz in jp.ne.sakura.kkkon.java.net.inetaddress.NetworkConnectionChecker.initialize()</td>
+<td>STYLE</td>
+<td><a class="externalLink" href="http://findbugs.sourceforge.net/bugDescriptions.html#DLS_DEAD_LOCAL_STORE">DLS_DEAD_LOCAL_STORE</a></td>
+<td>75</td>
+<td>Medium</td></tr></table></div>
       </div>
     </div>
     <div class="clear">
