@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.ProxySelector;
 import java.net.SocketAddress;
@@ -259,24 +260,71 @@ public class NetworkConnectionCheckerTestApp extends Activity
                                 {
                                     dest = destHost;
                                 }
+
                                 if ( null != dest )
                                 {
+                                    URI uri = null;
                                     try
                                     {
-                                        if ( dest.isReachable( 5*1000 ) )
-                                        {
-                                            Log.d( TAG, "destHost=" + dest.toString() + " reachable" );
-                                            isReachable = true;
-                                        }
-                                        else
-                                        {
-                                            Log.d( TAG, "destHost=" + dest.toString() + " not reachable" );
-                                        }
-                                        destHost = dest;
+                                        uri = new URI("http://www.google.com/");
                                     }
-                                    catch ( IOException e )
+                                    catch ( URISyntaxException e )
                                     {
-                                        
+                                        //Log.d( TAG, e.toString() );
+                                    }
+
+                                    if ( null != uri )
+                                    {
+                                        URL url = null;
+                                        try
+                                        {
+                                            url = uri.toURL();
+                                        }
+                                        catch (MalformedURLException ex)
+                                        {
+                                            Log.d( TAG, "got exception:" + ex.toString(), ex );
+                                        }
+
+                                        URLConnection conn = null;
+                                        if ( null != url )
+                                        {
+                                            try
+                                            {
+                                                conn = url.openConnection();
+                                                if ( null != conn )
+                                                {
+                                                    conn.setConnectTimeout( 3*1000 );
+                                                    conn.setReadTimeout( 3*1000 );
+                                                }
+                                            }
+                                            catch ( IOException e )
+                                            {
+                                                //Log.d( TAG, "got Exception" + e.toString(), e );
+                                            }
+                                            if ( conn instanceof HttpURLConnection )
+                                            {
+                                                HttpURLConnection httpConn = (HttpURLConnection)conn;
+                                                int responceCode = -1;
+                                                try
+                                                {
+                                                    responceCode = httpConn.getResponseCode();
+                                                }
+                                                catch (IOException ex)
+                                                {
+                                                    Log.d( TAG, "got exception:" + ex.toString(), ex );
+                                                }
+                                                if ( 0 < responceCode )
+                                                {
+                                                    isReachable = true;
+                                                    destHost = dest;
+                                                }
+                                                //Log.d( TAG, " HTTP ContentLength=" + httpConn.getContentLength() );
+                                                //Log.d( TAG, " HTTP res=" + httpConn.getResponseCode() );
+                                                httpConn.disconnect();
+                                                //Log.d( TAG, " HTTP ContentLength=" + httpConn.getContentLength() );
+                                                //Log.d( TAG, " HTTP res=" + httpConn.getResponseCode() );
+                                            }
+                                        }
                                     }
                                 }
                                 else
