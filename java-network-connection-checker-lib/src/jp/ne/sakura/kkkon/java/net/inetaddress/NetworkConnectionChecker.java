@@ -55,6 +55,12 @@ public class NetworkConnectionChecker
      */
     private static final String hostnameLowTTL = "www.google.com";
 
+    private static final String[] destURIs = new String[]
+    {
+        "http://" + hostnameLowTTL + "/"
+        , "https://" + hostnameLowTTL + "/"
+    };
+
     private static volatile boolean isReachable = false;
 
     private static ResolverThread thread = null;
@@ -152,39 +158,47 @@ public class NetworkConnectionChecker
         boolean result = false;
 
         String  target = null;
+        for ( final String destURI : destURIs )
         {
-            ProxySelector proxySelector = ProxySelector.getDefault();
-            //Log.d( TAG, "proxySelector=" + proxySelector );
-            if ( null != proxySelector )
+            if ( result )
             {
-                URI uri = null;
-                try
-                {
-                    uri = new URI("http://www.google.com/");
-                }
-                catch ( URISyntaxException e )
-                {
-                    //Log.d( TAG, e.toString() );
-                }
+                break;
+            }
 
-                if ( null != uri )
+            {
+                ProxySelector proxySelector = ProxySelector.getDefault();
+                //Log.d( TAG, "proxySelector=" + proxySelector );
+                if ( null != proxySelector )
                 {
-                    List<Proxy> proxies = proxySelector.select( uri );
-                    if ( null != proxies )
+                    URI uri = null;
+                    try
                     {
-                        for ( final Proxy proxy : proxies )
+                        uri = new URI( destURI );
+                    }
+                    catch ( URISyntaxException e )
+                    {
+                        //Log.d( TAG, e.toString() );
+                    }
+
+                    if ( null != uri )
+                    {
+                        List<Proxy> proxies = proxySelector.select( uri );
+                        if ( null != proxies )
                         {
-                            //Log.d( TAG, " proxy=" + proxy );
-                            if ( null != proxy )
+                            for ( final Proxy proxy : proxies )
                             {
-                                if ( Proxy.Type.HTTP == proxy.type() )
+                                //Log.d( TAG, " proxy=" + proxy );
+                                if ( null != proxy )
                                 {
-                                    final SocketAddress sa = proxy.address();
-                                    if ( sa instanceof InetSocketAddress )
+                                    if ( Proxy.Type.HTTP == proxy.type() )
                                     {
-                                        final InetSocketAddress isa = (InetSocketAddress)sa;
-                                        target = isa.getHostName();
-                                        break;
+                                        final SocketAddress sa = proxy.address();
+                                        if ( sa instanceof InetSocketAddress )
+                                        {
+                                            final InetSocketAddress isa = (InetSocketAddress)sa;
+                                            target = isa.getHostName();
+                                            break;
+                                        }
                                     }
                                 }
                             }
@@ -192,213 +206,213 @@ public class NetworkConnectionChecker
                     }
                 }
             }
-        }
 
-        if ( null == target )
-        {
-            target = hostnameLowTTL;
-            InetAddress dest = null;
-            try
+            if ( null == target )
             {
-                dest = InetAddress.getByName( target );
-            }
-            catch (UnknownHostException ex)
-            {
-                Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-            if ( null == dest )
-            {
-                //
-            }
-            else
-            {
-                URI uri = null;
+                target = hostnameLowTTL;
+                InetAddress dest = null;
                 try
                 {
-                    uri = new URI("http://www.google.com/");
+                    dest = InetAddress.getByName( target );
                 }
-                catch ( URISyntaxException e )
-                {
-                    //Log.d( TAG, e.toString() );
-                }
-
-                if ( null != uri )
-                {
-                    URL url = null;
-                    try
-                    {
-                        url = uri.toURL();
-                    }
-                    catch (MalformedURLException ex)
-                    {
-                        Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-
-                    URLConnection conn = null;
-                    if ( null != url )
-                    {
-                        try
-                        {
-                            conn = url.openConnection();
-                            if ( null != conn )
-                            {
-                                conn.setConnectTimeout( 3*1000 );
-                                conn.setReadTimeout( 3*1000 );
-                            }
-                        }
-                        catch ( IOException e )
-                        {
-                            //Log.d( TAG, "got Exception" + e.toString(), e );
-                        }
-                        if ( conn instanceof HttpURLConnection )
-                        {
-                            HttpURLConnection httpConn = (HttpURLConnection)conn;
-                            int responceCode = -1;
-                            try
-                            {
-                                responceCode = httpConn.getResponseCode();
-                            }
-                            catch (IOException ex)
-                            {
-                                Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                            if ( 0 < responceCode )
-                            {
-                                result = true;
-                            }
-                            //Log.d( TAG, " HTTP ContentLength=" + httpConn.getContentLength() );
-                            //Log.d( TAG, " HTTP res=" + httpConn.getResponseCode() );
-                            httpConn.disconnect();
-                            //Log.d( TAG, " HTTP ContentLength=" + httpConn.getContentLength() );
-                            //Log.d( TAG, " HTTP res=" + httpConn.getResponseCode() );
-                        }
-                    }
-                }
-            }
-        }
-        else
-        {
-            InetAddress dest = null;
-            try
-            {
-                dest = InetAddress.getByName( target );
-            }
-            catch (UnknownHostException ex)
-            {
-                Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            if ( null == dest )
-            {
-                //
-            }
-            else
-            {
-                boolean reachable = false;
-                try
-                {
-                    reachable = dest.isReachable( 5*1000 );
-                }
-                catch ( IOException ex )
+                catch (UnknownHostException ex)
                 {
                     Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
-                if ( reachable )
+                if ( null == dest )
                 {
-                    //Log.d( TAG, "destHost=" + dest.toString() + " reachable" );
-                    result = true;
+                    //
                 }
                 else
                 {
-                    //Log.d( TAG, "destHost=" + dest.toString() + " not reachable" );
+                    URI uri = null;
+                    try
                     {
-                        ProxySelector proxySelector = ProxySelector.getDefault();
-                        //Log.d( TAG, "proxySelector=" + proxySelector );
-                        if ( null != proxySelector )
+                        uri = new URI( destURI );
+                    }
+                    catch ( URISyntaxException e )
+                    {
+                        //Log.d( TAG, e.toString() );
+                    }
+
+                    if ( null != uri )
+                    {
+                        URL url = null;
+                        try
                         {
-                            URI uri = null;
+                            url = uri.toURL();
+                        }
+                        catch (MalformedURLException ex)
+                        {
+                            Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
+                        URLConnection conn = null;
+                        if ( null != url )
+                        {
                             try
                             {
-                                uri = new URI("http://www.google.com/");
-                            }
-                            catch ( URISyntaxException e )
-                            {
-                                //Log.d( TAG, e.toString() );
-                            }
-
-                            if ( null != uri )
-                            {
-                                List<Proxy> proxies = proxySelector.select( uri );
-                                if ( null != proxies )
+                                conn = url.openConnection();
+                                if ( null != conn )
                                 {
-                                    for ( final Proxy proxy : proxies )
-                                    {
-                                        //Log.d( TAG, " proxy=" + proxy );
-                                        if ( null != proxy )
-                                        {
-                                            if ( Proxy.Type.HTTP == proxy.type() )
-                                            {
-                                                URL url = null;
-                                                try
-                                                {
-                                                    url = uri.toURL();
-                                                }
-                                                catch (MalformedURLException ex)
-                                                {
-                                                    Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
-                                                }
-
-                                                URLConnection conn = null;
-                                                if ( null != url )
-                                                {
-                                                    try
-                                                    {
-                                                        conn = url.openConnection( proxy );
-                                                        if ( null != conn )
-                                                        {
-                                                            conn.setConnectTimeout( 3*1000 );
-                                                            conn.setReadTimeout( 3*1000 );
-                                                        }
-                                                    }
-                                                    catch ( IOException e )
-                                                    {
-                                                        //Log.d( TAG, "got Exception" + e.toString(), e );
-                                                    }
-                                                    if ( conn instanceof HttpURLConnection )
-                                                    {
-                                                        HttpURLConnection httpConn = (HttpURLConnection)conn;
-                                                        int responceCode = -1;
-                                                        try
-                                                        {
-                                                            responceCode = httpConn.getResponseCode();
-                                                        }
-                                                        catch (IOException ex)
-                                                        {
-                                                            Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
-                                                        }
-                                                        if ( 0 < responceCode )
-                                                        {
-                                                            result = true;
-                                                        }
-                                                        //Log.d( TAG, " HTTP ContentLength=" + httpConn.getContentLength() );
-                                                        //Log.d( TAG, " HTTP res=" + httpConn.getResponseCode() );
-                                                        httpConn.disconnect();
-                                                        //Log.d( TAG, " HTTP ContentLength=" + httpConn.getContentLength() );
-                                                        //Log.d( TAG, " HTTP res=" + httpConn.getResponseCode() );
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    } // for proxies
+                                    conn.setConnectTimeout( 3*1000 );
+                                    conn.setReadTimeout( 3*1000 );
                                 }
+                            }
+                            catch ( IOException e )
+                            {
+                                //Log.d( TAG, "got Exception" + e.toString(), e );
+                            }
+                            if ( conn instanceof HttpURLConnection )
+                            {
+                                HttpURLConnection httpConn = (HttpURLConnection)conn;
+                                int responceCode = -1;
+                                try
+                                {
+                                    responceCode = httpConn.getResponseCode();
+                                }
+                                catch (IOException ex)
+                                {
+                                    Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                                if ( 0 < responceCode )
+                                {
+                                    result = true;
+                                }
+                                //Log.d( TAG, " HTTP ContentLength=" + httpConn.getContentLength() );
+                                //Log.d( TAG, " HTTP res=" + httpConn.getResponseCode() );
+                                httpConn.disconnect();
+                                //Log.d( TAG, " HTTP ContentLength=" + httpConn.getContentLength() );
+                                //Log.d( TAG, " HTTP res=" + httpConn.getResponseCode() );
                             }
                         }
                     }
-
                 }
             }
-        }
+            else
+            {
+                InetAddress dest = null;
+                try
+                {
+                    dest = InetAddress.getByName( target );
+                }
+                catch (UnknownHostException ex)
+                {
+                    Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                if ( null == dest )
+                {
+                    //
+                }
+                else
+                {
+                    boolean reachable = false;
+                    try
+                    {
+                        reachable = dest.isReachable( 5*1000 );
+                    }
+                    catch ( IOException ex )
+                    {
+                        Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+
+                    if ( reachable )
+                    {
+                        //Log.d( TAG, "destHost=" + dest.toString() + " reachable" );
+                        result = true;
+                    }
+                    else
+                    {
+                        //Log.d( TAG, "destHost=" + dest.toString() + " not reachable" );
+                        {
+                            ProxySelector proxySelector = ProxySelector.getDefault();
+                            //Log.d( TAG, "proxySelector=" + proxySelector );
+                            if ( null != proxySelector )
+                            {
+                                URI uri = null;
+                                try
+                                {
+                                    uri = new URI( destURI );
+                                }
+                                catch ( URISyntaxException e )
+                                {
+                                    //Log.d( TAG, e.toString() );
+                                }
+
+                                if ( null != uri )
+                                {
+                                    List<Proxy> proxies = proxySelector.select( uri );
+                                    if ( null != proxies )
+                                    {
+                                        for ( final Proxy proxy : proxies )
+                                        {
+                                            //Log.d( TAG, " proxy=" + proxy );
+                                            if ( null != proxy )
+                                            {
+                                                if ( Proxy.Type.HTTP == proxy.type() )
+                                                {
+                                                    URL url = null;
+                                                    try
+                                                    {
+                                                        url = uri.toURL();
+                                                    }
+                                                    catch (MalformedURLException ex)
+                                                    {
+                                                        Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
+                                                    }
+
+                                                    URLConnection conn = null;
+                                                    if ( null != url )
+                                                    {
+                                                        try
+                                                        {
+                                                            conn = url.openConnection( proxy );
+                                                            if ( null != conn )
+                                                            {
+                                                                conn.setConnectTimeout( 3*1000 );
+                                                                conn.setReadTimeout( 3*1000 );
+                                                            }
+                                                        }
+                                                        catch ( IOException e )
+                                                        {
+                                                            //Log.d( TAG, "got Exception" + e.toString(), e );
+                                                        }
+                                                        if ( conn instanceof HttpURLConnection )
+                                                        {
+                                                            HttpURLConnection httpConn = (HttpURLConnection)conn;
+                                                            int responceCode = -1;
+                                                            try
+                                                            {
+                                                                responceCode = httpConn.getResponseCode();
+                                                            }
+                                                            catch (IOException ex)
+                                                            {
+                                                                Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
+                                                            }
+                                                            if ( 0 < responceCode )
+                                                            {
+                                                                result = true;
+                                                            }
+                                                            //Log.d( TAG, " HTTP ContentLength=" + httpConn.getContentLength() );
+                                                            //Log.d( TAG, " HTTP res=" + httpConn.getResponseCode() );
+                                                            httpConn.disconnect();
+                                                            //Log.d( TAG, " HTTP ContentLength=" + httpConn.getContentLength() );
+                                                            //Log.d( TAG, " HTTP res=" + httpConn.getResponseCode() );
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        } // for proxies
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+        } // for destURI
 
         return result;
     }
