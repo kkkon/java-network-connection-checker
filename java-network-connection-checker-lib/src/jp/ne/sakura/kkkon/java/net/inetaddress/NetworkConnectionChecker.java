@@ -55,12 +55,11 @@ public class NetworkConnectionChecker
      */
     private static final String hostnameLowTTL = "www.google.com";
 
-    private static String hostname = "kkkon.sakura.ne.jp";
     private static volatile boolean isReachable = false;
 
     private static ResolverThread thread = null;
 
-    public static synchronized void initialize( final String host )
+    public static synchronized void initialize()
     {
         Class<?>    clazz = null;
         try
@@ -69,11 +68,6 @@ public class NetworkConnectionChecker
             isAndroid = true;
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        if ( null != host )
-        {
-            hostname = host;
         }
     }
 

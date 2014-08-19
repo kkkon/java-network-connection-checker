@@ -84,7 +84,7 @@ public class NetworkConnectionCheckerTestApp extends Activity
         final Context context = this.getApplicationContext();
 
         {
-            NetworkConnectionChecker.initialize( "kkkon.sakura.ne.jp" );
+            NetworkConnectionChecker.initialize();
         }
 
         super.onCreate(savedInstanceState);
