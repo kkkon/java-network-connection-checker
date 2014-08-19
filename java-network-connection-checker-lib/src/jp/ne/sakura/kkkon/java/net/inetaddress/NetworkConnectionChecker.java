@@ -219,36 +219,66 @@ public class NetworkConnectionChecker
             }
             else
             {
-                target = hostname;
+                URI uri = null;
                 try
                 {
-                    dest = InetAddress.getByName( target );
+                    uri = new URI("http://www.google.com/");
                 }
-                catch (UnknownHostException ex)
+                catch ( URISyntaxException e )
                 {
-                    Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
+                    //Log.d( TAG, e.toString() );
                 }
-                if ( null == dest )
+
+                if ( null != uri )
                 {
-                    //
-                }
-                else
-                {
+                    URL url = null;
                     try
                     {
-                        if ( dest.isReachable( 5*1000 ) )
-                        {
-                            //Log.d( TAG, "destHost=" + dest.toString() + " reachable" );
-                            result = true;
-                        }
-                        else
-                        {
-                            //Log.d( TAG, "destHost=" + dest.toString() + " not reachable" );
-                        }
+                        url = uri.toURL();
                     }
-                    catch ( IOException ex )
+                    catch (MalformedURLException ex)
                     {
                         Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+
+                    URLConnection conn = null;
+                    if ( null != url )
+                    {
+                        try
+                        {
+                            conn = url.openConnection();
+                            if ( null != conn )
+                            {
+                                conn.setConnectTimeout( 3*1000 );
+                                conn.setReadTimeout( 3*1000 );
+                            }
+                        }
+                        catch ( IOException e )
+                        {
+                            //Log.d( TAG, "got Exception" + e.toString(), e );
+                        }
+                        if ( conn instanceof HttpURLConnection )
+                        {
+                            HttpURLConnection httpConn = (HttpURLConnection)conn;
+                            int responceCode = -1;
+                            try
+                            {
+                                responceCode = httpConn.getResponseCode();
+                            }
+                            catch (IOException ex)
+                            {
+                                Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                            if ( 0 < responceCode )
+                            {
+                                result = true;
+                            }
+                            //Log.d( TAG, " HTTP ContentLength=" + httpConn.getContentLength() );
+                            //Log.d( TAG, " HTTP res=" + httpConn.getResponseCode() );
+                            httpConn.disconnect();
+                            //Log.d( TAG, " HTTP ContentLength=" + httpConn.getContentLength() );
+                            //Log.d( TAG, " HTTP res=" + httpConn.getResponseCode() );
+                        }
                     }
                 }
             }
