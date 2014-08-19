@@ -263,69 +263,81 @@ public class NetworkConnectionCheckerTestApp extends Activity
 
                                 if ( null != dest )
                                 {
-                                    URI uri = null;
-                                    try
+                                    final String[] uris = new String[] { "http://www.google.com/", "https://www.google.com/" };
+                                    for ( final String destURI : uris )
                                     {
-                                        uri = new URI("http://www.google.com/");
-                                    }
-                                    catch ( URISyntaxException e )
-                                    {
-                                        //Log.d( TAG, e.toString() );
-                                    }
-
-                                    if ( null != uri )
-                                    {
-                                        URL url = null;
+                                        URI uri = null;
                                         try
                                         {
-                                            url = uri.toURL();
+                                            uri = new URI( destURI );
                                         }
-                                        catch (MalformedURLException ex)
+                                        catch ( URISyntaxException e )
                                         {
-                                            Log.d( TAG, "got exception:" + ex.toString(), ex );
+                                            //Log.d( TAG, e.toString() );
                                         }
 
-                                        URLConnection conn = null;
-                                        if ( null != url )
+                                        if ( null != uri )
                                         {
+                                            URL url = null;
                                             try
                                             {
-                                                conn = url.openConnection();
-                                                if ( null != conn )
-                                                {
-                                                    conn.setConnectTimeout( 3*1000 );
-                                                    conn.setReadTimeout( 3*1000 );
-                                                }
+                                                url = uri.toURL();
                                             }
-                                            catch ( IOException e )
+                                            catch (MalformedURLException ex)
                                             {
-                                                //Log.d( TAG, "got Exception" + e.toString(), e );
+                                                Log.d( TAG, "got exception:" + ex.toString(), ex );
                                             }
-                                            if ( conn instanceof HttpURLConnection )
+
+                                            URLConnection conn = null;
+                                            if ( null != url )
                                             {
-                                                HttpURLConnection httpConn = (HttpURLConnection)conn;
-                                                int responceCode = -1;
+                                                Log.d( TAG, "openConnection before" );
                                                 try
                                                 {
-                                                    responceCode = httpConn.getResponseCode();
+                                                    conn = url.openConnection();
+                                                    if ( null != conn )
+                                                    {
+                                                        conn.setConnectTimeout( 3*1000 );
+                                                        conn.setReadTimeout( 3*1000 );
+                                                    }
                                                 }
-                                                catch (IOException ex)
+                                                catch ( IOException e )
                                                 {
-                                                    Log.d( TAG, "got exception:" + ex.toString(), ex );
+                                                    //Log.d( TAG, "got Exception" + e.toString(), e );
                                                 }
-                                                if ( 0 < responceCode )
+                                                Log.d( TAG, "openConnection after" );
+                                                if ( conn instanceof HttpURLConnection )
                                                 {
-                                                    isReachable = true;
-                                                    destHost = dest;
+                                                    HttpURLConnection httpConn = (HttpURLConnection)conn;
+                                                    int responceCode = -1;
+                                                    try
+                                                    {
+                                                        Log.d( TAG, "getResponceCode before" );
+                                                        responceCode = httpConn.getResponseCode();
+                                                        Log.d( TAG, "getResponceCode after" );
+                                                    }
+                                                    catch (IOException ex)
+                                                    {
+                                                        Log.d( TAG, "got exception:" + ex.toString(), ex );
+                                                    }
+                                                    Log.d( TAG, "responceCode=" + responceCode );
+                                                    if ( 0 < responceCode )
+                                                    {
+                                                        isReachable = true;
+                                                        destHost = dest;
+                                                    }
+                                                    Log.d( TAG, " HTTP ContentLength=" + httpConn.getContentLength() );
+                                                    httpConn.disconnect();
+                                                    Log.d( TAG, " HTTP ContentLength=" + httpConn.getContentLength() );
                                                 }
-                                                //Log.d( TAG, " HTTP ContentLength=" + httpConn.getContentLength() );
-                                                //Log.d( TAG, " HTTP res=" + httpConn.getResponseCode() );
-                                                httpConn.disconnect();
-                                                //Log.d( TAG, " HTTP ContentLength=" + httpConn.getContentLength() );
-                                                //Log.d( TAG, " HTTP res=" + httpConn.getResponseCode() );
                                             }
+                                        } // if uri
+
+                                        if ( isReachable )
+                                        {
+                                            //break;
                                         }
-                                    }
+                                    } // for uris
                                 }
                                 else
                                 {
