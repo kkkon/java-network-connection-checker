@@ -30,6 +30,8 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -71,6 +73,9 @@ public class NetworkConnectionCheckerTestApp extends Activity
     private InetAddress destHost = null;
     private boolean isReachable = false;
 
+    private TextView textView = null;
+    private Handler handler = null;
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -91,8 +96,9 @@ public class NetworkConnectionCheckerTestApp extends Activity
         layout.setOrientation( LinearLayout.VERTICAL );
 
         TextView  tv = new TextView(this);
-        tv.setText( "ExceptionHandler" );
+        tv.setText( "reachable=" );
         layout.addView( tv );
+        this.textView = tv;
 
         Button btn1 = new Button( this );
         btn1.setText( "invoke Exception" );
@@ -583,12 +589,30 @@ public class NetworkConnectionCheckerTestApp extends Activity
     protected void onStart() {
         NetworkConnectionChecker.start();
 
+        this.handler = new Handler() {
+
+            @Override
+            public void handleMessage(Message msg) {
+                //Log.d( TAG, "hnadleMessage" );
+                final boolean isReachable = NetworkConnectionChecker.isReachable();
+                textView.setText( "reachable=" + isReachable );
+                //textView.invalidate();
+
+                removeMessages(0);
+                sendMessageDelayed( obtainMessage(0), 1*1000 );
+            }
+
+        };
+        this.handler.sendMessage( this.handler.obtainMessage(0) );
+
         super.onStart(); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     protected void onStop() {
         NetworkConnectionChecker.stop();
+
+        this.handler = null;
 
         super.onStop(); //To change body of generated methods, choose Tools | Templates.
     }
