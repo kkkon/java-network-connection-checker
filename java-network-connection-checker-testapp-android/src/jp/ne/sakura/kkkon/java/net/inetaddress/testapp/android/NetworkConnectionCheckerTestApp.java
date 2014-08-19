@@ -647,7 +647,7 @@ public class NetworkConnectionCheckerTestApp extends Activity
 
     @Override
     protected void onStart() {
-        NetworkConnectionChecker.start();
+        NetworkConnectionChecker.start( false );
 
         this.handler = new Handler() {
 

@@ -37,6 +37,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownHostException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -62,6 +63,7 @@ public class NetworkConnectionChecker
     };
 
     private static volatile boolean isReachable = false;
+    private static AtomicLong lastCheckedTime = new AtomicLong();
 
     private static ResolverThread thread = null;
 
@@ -82,12 +84,18 @@ public class NetworkConnectionChecker
         return isReachable;
     }
 
+    public static long getLastCheckedTime()
+    {
+        return lastCheckedTime.get();
+    }
 
-    public static synchronized  void start()
+
+    public static synchronized  void start( final boolean oneShot )
     {
         if ( null == thread )
         {
             thread = new ResolverThread();
+            thread.oneShot = oneShot;
             thread.setName( "DNS Resolver KK" );
             thread.start();
         }
@@ -117,39 +125,51 @@ public class NetworkConnectionChecker
 
     private static class ResolverThread extends Thread
     {
+        private boolean oneShot = false;
 
         @Override
         public void run()
         {
-            isReachable = false;
-
-            while( !this.isInterrupted() )
+            if ( oneShot )
             {
-                try
-                {
-                    Thread.sleep( 5 * 1000 );
-                }
-                catch (InterruptedException ex)
-                {
-                    Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
-                    break;
-                }
                 isReachable = false;
                 final boolean reachable = checkConnection();
                 isReachable = reachable;
+                lastCheckedTime.set( System.currentTimeMillis() );
+            }
+            else
+            {
+                isReachable = false;
 
-                try
+                while( !this.isInterrupted() )
                 {
-                    final long timeout = (reachable)?(60*1000):(30*1000);
-                    Thread.sleep( timeout );
-                }
-                catch (InterruptedException ex)
-                {
-                    Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
-                    break;
-                }
+                    try
+                    {
+                        Thread.sleep( 5 * 1000 );
+                    }
+                    catch (InterruptedException ex)
+                    {
+                        Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
+                        break;
+                    }
+                    isReachable = false;
+                    final boolean reachable = checkConnection();
+                    isReachable = reachable;
+                    lastCheckedTime.set( System.currentTimeMillis() );
 
-            } // while
+                    try
+                    {
+                        final long timeout = (reachable)?(60*1000):(30*1000);
+                        Thread.sleep( timeout );
+                    }
+                    catch (InterruptedException ex)
+                    {
+                        Logger.getLogger(NetworkConnectionChecker.class.getName()).log(Level.SEVERE, null, ex);
+                        break;
+                    }
+
+                } // while
+            }
         }
     }
 
