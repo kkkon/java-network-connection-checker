@@ -51,7 +51,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import jp.ne.sakura.kkkon.java.net.inetaddress.NetworkConnectionChecker;
 import org.apache.http.HttpResponse;
@@ -655,11 +657,15 @@ public class NetworkConnectionCheckerTestApp extends Activity
             public void handleMessage(Message msg) {
                 //Log.d( TAG, "hnadleMessage" );
                 final boolean isReachable = NetworkConnectionChecker.isReachable();
-                textView.setText( "reachable=" + isReachable );
+                final long lastTime = NetworkConnectionChecker.getLastCheckedTime();
+                final Calendar cal = Calendar.getInstance();
+                cal.setTimeInMillis( lastTime );
+                final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+                textView.setText( "reachable=" + isReachable + "\n" + "time=" + sdf.format( cal.getTime() ) );
                 //textView.invalidate();
 
                 removeMessages(0);
-                sendMessageDelayed( obtainMessage(0), 1*1000 );
+                sendMessageDelayed( obtainMessage(0), 10*1000 );
             }
 
         };
